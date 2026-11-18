@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+<<<<<<< HEAD
+      <module fileurl="file://$PROJECT_DIR$/mobile.iml" filepath="$PROJECT_DIR$/mobile.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/mobile_android.iml" filepath="$PROJECT_DIR$/android/mobile_android.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/.idea/CampusSave.iml" filepath="$PROJECT_DIR$/.idea/CampusSave.iml" />
+>>>>>>> 6d920a35e7c0e29376d3cea6cf1673dfb7818911
+    </modules>
+  </component>
+</project>
