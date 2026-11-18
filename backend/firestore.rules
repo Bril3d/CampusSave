@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userRole() == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role in ['student', 'merchant']
+        && request.resource.data.blocked == false;
+      allow update: if isAdmin()
+        || (isSignedIn() && request.auth.uid == userId
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.blocked == resource.data.blocked);
+    }
+
+    match /shops/{shopId} {
+      allow read: if resource.data.approved == true
+        || (isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin()));
+      allow create: if isSignedIn()
+        && userRole() == 'merchant'
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.approved == false;
+      allow update: if isAdmin()
+        || (isSignedIn() && resource.data.ownerId == request.auth.uid
+            && request.resource.data.approved == resource.data.approved);
+    }
+
+    match /offers/{offerId} {
+      allow read: if true;
+      allow write: if false; // Passent par le backend Express (Firebase Admin SDK)
+    }
+
+    match /orders/{orderId} {
+      allow read: if isSignedIn()
+        && (resource.data.studentId == request.auth.uid || isAdmin());
+      allow write: if false; // Réservation, paiement Konnect et QR Code gérés côté serveur
+    }
+  }
+}

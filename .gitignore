@@ -1,0 +1,16 @@
+# Node (web/ et backend/)
+node_modules/
+dist/
+.data/
+.env
+.env.local
+*.log
+
+# Secrets Firebase : ne jamais pousser
+*serviceAccountKey*.json
+*firebase-adminsdk*.json
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
