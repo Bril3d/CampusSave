@@ -5,147 +5,86 @@ import '../../repositories/payment_repository.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/state_views.dart';
 
-/// Écran de paiement d'une commande.
-/// Se ferme avec `true` quand le paiement est confirmé.
 class PaymentScreen extends StatefulWidget {
   final Order order;
-  final PaymentRepository repository;
-
-  PaymentScreen({super.key, required this.order, PaymentRepository? repository})
-      : repository = repository ?? FakePaymentRepository();
-
-  @override
-  State<PaymentScreen> createState() => _PaymentScreenState();
+  const PaymentScreen({super.key, required this.order});
+  @override State<PaymentScreen> createState() => _State();
 }
-
-class _PaymentScreenState extends State<PaymentScreen> {
-  late Future<PaymentSession> _sessionFuture;
+class _State extends State<PaymentScreen> {
+  late Future<PaymentSession> _fut;
   bool _busy = false;
+  @override void initState() { super.initState(); _fut = FakePaymentRepository().createPayment(widget.order); }
+  void _retry() => setState(() => _fut = FakePaymentRepository().createPayment(widget.order));
 
-  @override
-  void initState() {
-    super.initState();
-    _sessionFuture = widget.repository.createPayment(widget.order);
-  }
-
-  void _restart() {
-    setState(() {
-      _sessionFuture = widget.repository.createPayment(widget.order);
-    });
-  }
-
-  Future<void> _finish(PaymentSession session, {required bool success}) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
+  Future<void> _finish(PaymentSession session, bool success) async {
+    final msg = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
     setState(() => _busy = true);
     try {
-      final repo = widget.repository;
-      if (repo is FakePaymentRepository) {
-        repo.simulateOutcome(session.id, success: success);
-      }
-      // L'application ne décide jamais du résultat : elle lit le statut
-      // confirmé par le Backend.
-      final status = await repo.getPaymentStatus(session.id);
-
-      if (status == PaymentStatus.success) {
-        navigator.pop(true);
-        return;
-      }
-      if (status == PaymentStatus.failed) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Payment failed. You can try again.')),
-        );
-        if (mounted) _restart();
-      } else {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('Payment is still pending.')),
-        );
-      }
+      FakePaymentRepository().simulateOutcome(session.id, success: success);
+      final status = await FakePaymentRepository().getStatus(session.id);
+      if (status == PaymentStatus.success) { nav.pop(true); return; }
+      msg.showSnackBar(const SnackBar(content: Text('Payment failed. Please try again.')));
+      if (mounted) _retry();
     } on PaymentException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+      msg.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally { if (mounted) setState(() => _busy = false); }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final order = widget.order;
-    final textTheme = Theme.of(context).textTheme;
-    final isDemo = widget.repository is FakePaymentRepository;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
-      body: FutureBuilder<PaymentSession>(
-        future: _sessionFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const LoadingView();
-          }
-          if (snapshot.hasError) {
-            final error = snapshot.error;
-            return ErrorView(
-              message: error is PaymentException
-                  ? error.message
-                  : 'Could not start the payment.',
-              onRetry: _restart,
-            );
-          }
-
-          final session = snapshot.data!;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              if (isDemo)
-                Card(
-                  color: Theme.of(context).colorScheme.secondaryContainer,
-                  child: const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Text(
-                      'Simulated payment. The Konnect test payment will replace '
-                      'this screen once the backend is connected.',
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 16),
-              Text(order.offerTitle, style: textTheme.titleLarge),
-              Text(order.merchantName),
-              const SizedBox(height: 16),
-              Text('Quantity: ${order.quantity}'),
-              Text(formatPickup(order.pickupStart, order.pickupEnd)),
-              const Divider(height: 32),
-              Text(
-                'Total: ${formatPrice(session.amount)}',
-                style: textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
-              if (isDemo) ...[
-                ElevatedButton(
-                  onPressed:
-                      _busy ? null : () => _finish(session, success: true),
-                  child: _busy
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Simulate successful payment'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed:
-                      _busy ? null : () => _finish(session, success: false),
-                  child: const Text('Simulate failed payment'),
-                ),
-              ] else
-                const Text(
-                  'Real payment is not connected yet.',
-                  textAlign: TextAlign.center,
-                ),
-            ],
-          );
-        },
-      ),
-    );
+  @override Widget build(BuildContext c) {
+    final s = Theme.of(c).colorScheme;
+    return Scaffold(appBar: AppBar(title: const Text('Payment')),
+      body: FutureBuilder<PaymentSession>(future: _fut,
+        builder: (c, snap) {
+          if (snap.connectionState != ConnectionState.done) return const LoadingView();
+          if (snap.hasError) return ErrorView(
+            message: snap.error is PaymentException ? snap.error.toString() : 'Could not start payment.',
+            onRetry: _retry);
+          final session = snap.data!;
+          return ListView(padding: const EdgeInsets.all(24), children: [
+            Container(padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: s.secondaryContainer,
+                borderRadius: BorderRadius.circular(14)),
+              child: Row(children: [
+                Icon(Icons.science_outlined, color: s.onSecondaryContainer),
+                const SizedBox(width: 10),
+                Expanded(child: Text('Demo payment – Konnect test mode will replace this once backend is connected.',
+                  style: TextStyle(color: s.onSecondaryContainer, fontSize: 13))),
+              ])),
+            const SizedBox(height: 24),
+            Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Order Summary', style: Theme.of(c).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              _row('Item', widget.order.offerTitle),
+              _row('Merchant', widget.order.merchantName),
+              _row('Quantity', '${widget.order.quantity}'),
+              _row('Pickup', fPickup(widget.order.pickupStart, widget.order.pickupEnd)),
+              const Divider(height: 24),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Text('Total', style: Theme.of(c).textTheme.titleLarge),
+                Text(fPrice(session.amount),
+                  style: Theme.of(c).textTheme.titleLarge?.copyWith(
+                    color: s.primary, fontWeight: FontWeight.bold)),
+              ]),
+            ]))),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(icon: const Icon(Icons.check_circle_outline),
+              label: _busy ? const SizedBox(height: 20, width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : const Text('Simulate successful payment'),
+              onPressed: _busy ? null : () => _finish(session, true)),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(icon: const Icon(Icons.cancel_outlined),
+              label: const Text('Simulate failed payment'),
+              style: OutlinedButton.styleFrom(foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red)),
+              onPressed: _busy ? null : () => _finish(session, false)),
+          ]);
+        }));
   }
+  Widget _row(String k, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [Text(k, style: const TextStyle(color: Colors.grey)),
+        Flexible(child: Text(v, textAlign: TextAlign.end))]));
 }

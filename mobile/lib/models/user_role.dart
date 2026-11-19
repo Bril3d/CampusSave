@@ -1,32 +1,16 @@
-/// Rôles possibles d'un utilisateur.
-/// PROVISOIRE : les valeurs texte ('student', 'merchant', 'admin') doivent
-/// être confirmées par le développeur Backend.
 enum UserRole {
-  student,
-  merchant,
-  admin;
-
-  static UserRole? fromString(String? value) {
-    switch (value?.toLowerCase()) {
-      case 'student':
-        return UserRole.student;
-      case 'merchant':
-        return UserRole.merchant;
-      case 'admin':
-        return UserRole.admin;
-      default:
-        return null;
-    }
+  student, merchant, merchantPending, admin;
+  static UserRole? fromString(String? v) {
+    if (v == null) return null;
+    for (final r in values) { if (r.name == v) return r; }
+    return null;
   }
-
   String get label {
     switch (this) {
-      case UserRole.student:
-        return 'Student';
-      case UserRole.merchant:
-        return 'Merchant';
-      case UserRole.admin:
-        return 'Admin';
+      case UserRole.student: return 'Student';
+      case UserRole.merchant: return 'Merchant';
+      case UserRole.merchantPending: return 'Merchant (Pending)';
+      case UserRole.admin: return 'Admin';
     }
   }
 }

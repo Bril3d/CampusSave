@@ -4,50 +4,41 @@ import '../../utils/validators.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
-
-  @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  @override State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _auth = AuthService();
-
-  bool _loading = false;
+  final _fk = GlobalKey<FormState>();
+  final _ec = TextEditingController();
+  bool _load = false;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
+    _ec.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
+    if (!_fk.currentState!.validate()) return;
+    setState(() => _load = true);
+    final msg = ScaffoldMessenger.of(context);
+    final nav = Navigator.of(context);
     try {
-      await _auth.sendPasswordReset(_emailCtrl.text);
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'If an account exists for this email, a reset link has been sent.',
-          ),
-        ),
-      );
-      navigator.pop();
+      await AuthService().sendPasswordReset(_ec.text);
+      msg.showSnackBar(const SnackBar(
+          content: Text('If this email exists, a reset link has been sent.')));
+      nav.pop();
     } on AuthException catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+      msg.showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _load = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset password')),
+      appBar: AppBar(title: const Text('Reset Password')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -55,16 +46,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
-                key: _formKey,
+                key: _fk,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Enter your email and we will send you a link to reset your password.',
-                    ),
+                    const Icon(Icons.lock_reset, size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
+                    const Text(
+                      "Enter your email and we'll send a reset link.",
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
                     TextFormField(
-                      controller: _emailCtrl,
+                      controller: _ec,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _submit(),
@@ -76,12 +70,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
+                      onPressed: _load ? null : _submit,
+                      child: _load
                           ? const SizedBox(
                               height: 22,
                               width: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Send reset link'),
                     ),

@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
-
-/// Bandeau affiché tant que les données sont des données de démonstration.
 class DemoBanner extends StatelessWidget {
   const DemoBanner({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.secondaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: const Text(
-        'Demo data - not connected to the server yet',
-        style: TextStyle(fontSize: 12),
-      ),
-    );
-  }
+  @override Widget build(BuildContext c) => Container(
+    width: double.infinity,
+    color: Theme.of(c).colorScheme.secondaryContainer,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    child: Row(children: [
+      Icon(Icons.science_outlined, size: 16,
+        color: Theme.of(c).colorScheme.onSecondaryContainer),
+      const SizedBox(width: 8),
+      Text('Demo mode – not connected to server',
+        style: TextStyle(fontSize: 12,
+          color: Theme.of(c).colorScheme.onSecondaryContainer)),
+    ]));
 }

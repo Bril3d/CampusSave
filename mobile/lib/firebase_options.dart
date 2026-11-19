@@ -49,13 +49,6 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC1ShTXhVzKqNe-ocPpmy--I6LqdjvbXQE',
-    appId: '1:799349094687:android:d10d864fab94161759982a',
-    messagingSenderId: '799349094687',
-    projectId: 'campussave-d1a3f',
-    storageBucket: 'campussave-d1a3f.firebasestorage.app',
-  );
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyCa9wLF8aOjYtYR-3cXE_0DdeBoZIqyY2A',
     appId: '1:799349094687:web:97b2e9be41c5007a59982a',
@@ -64,5 +57,13 @@ class DefaultFirebaseOptions {
     authDomain: 'campussave-d1a3f.firebaseapp.com',
     storageBucket: 'campussave-d1a3f.firebasestorage.app',
     measurementId: 'G-J1620E60Q8',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyC1ShTXhVzKqNe-ocPpmy--I6LqdjvbXQE',
+    appId: '1:799349094687:android:d10d864fab94161759982a',
+    messagingSenderId: '799349094687',
+    projectId: 'campussave-d1a3f',
+    storageBucket: 'campussave-d1a3f.firebasestorage.app',
   );
 }
