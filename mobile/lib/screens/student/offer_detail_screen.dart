@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import '../../config/app_theme.dart';
 import '../../models/offer.dart';
+import '../../models/order.dart';
 import '../../repositories/order_repository.dart';
 import '../../utils/formatters.dart';
+import '../../widgets/neo_widgets.dart';
 
 class OfferDetailScreen extends StatefulWidget {
-  final Offer offer; final String studentId;
+  final Offer offer;
+  final String studentId;
+
   const OfferDetailScreen({super.key, required this.offer, required this.studentId});
-  @override State<OfferDetailScreen> createState() => _State();
+
+  @override
+  State<OfferDetailScreen> createState() => _OfferDetailScreenState();
 }
-class _State extends State<OfferDetailScreen> {
-  int _qty = 1; bool _busy = false;
+
+class _OfferDetailScreenState extends State<OfferDetailScreen> {
+  int _qty = 1;
+  bool _busy = false;
 
   Future<void> _reserve() async {
     final msg = ScaffoldMessenger.of(context);
@@ -17,93 +26,201 @@ class _State extends State<OfferDetailScreen> {
     setState(() => _busy = true);
     try {
       final order = await FakeOrderRepository().create(
-        offer: widget.offer, quantity: _qty, studentId: widget.studentId);
+        offer: widget.offer,
+        quantity: _qty,
+        studentId: widget.studentId,
+      );
       nav.pop(order);
     } on OrderException catch (e) {
       msg.showSnackBar(SnackBar(content: Text(e.message)));
-    } finally { if (mounted) setState(() => _busy = false); }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
-  @override Widget build(BuildContext c) {
+  @override
+  Widget build(BuildContext context) {
     final o = widget.offer;
-    final s = Theme.of(c).colorScheme;
-    final t = Theme.of(c).textTheme;
-    return Scaffold(appBar: AppBar(title: const Text('Offer Details')),
-      body: ListView(padding: const EdgeInsets.all(16), children: [
-        Container(height: 180,
-          decoration: BoxDecoration(color: s.primaryContainer,
-            borderRadius: BorderRadius.circular(16)),
-          child: Icon(categoryIcon(o.category), size: 72, color: s.onPrimaryContainer)),
-        const SizedBox(height: 16),
-        Text(o.title, style: t.headlineSmall),
-        const SizedBox(height: 4),
-        Row(children: [
-          Icon(Icons.storefront_outlined, size: 16, color: s.secondary),
-          const SizedBox(width: 4),
-          Text(o.merchantName, style: TextStyle(color: s.secondary)),
-          const SizedBox(width: 12),
-          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(color: s.secondaryContainer,
-              borderRadius: BorderRadius.circular(8)),
-            child: Text(o.category, style: const TextStyle(fontSize: 12))),
-        ]),
-        const SizedBox(height: 12),
-        Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          Text(fPrice(o.discountedPrice),
-            style: t.titleLarge?.copyWith(color: s.primary, fontWeight: FontWeight.bold)),
-          const SizedBox(width: 10),
-          Text(fPrice(o.originalPrice),
-            style: t.bodyMedium?.copyWith(decoration: TextDecoration.lineThrough,
-              color: Colors.grey)),
-          const SizedBox(width: 10),
-          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: s.secondary, borderRadius: BorderRadius.circular(8)),
-            child: Text('-${o.discountPercent}%',
-              style: TextStyle(color: s.onSecondary, fontWeight: FontWeight.bold))),
-        ]),
-        const SizedBox(height: 12),
-        Text(o.description),
-        const SizedBox(height: 16),
-        Card(child: Column(children: [
-          ListTile(dense: true, leading: const Icon(Icons.schedule),
-            title: Text(fPickup(o.pickupStart, o.pickupEnd))),
-          const Divider(height: 1),
-          ListTile(dense: true, leading: const Icon(Icons.inventory_2_outlined),
-            title: Text(o.soldOut ? 'Sold out' : '${o.quantity} available'),
-            trailing: o.soldOut ? null : Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8)),
-              child: Text('${o.discountPercent}% off',
-                style: TextStyle(color: Colors.green.shade700, fontSize: 12,
-                  fontWeight: FontWeight.bold)))),
-        ])),
-        const SizedBox(height: 20),
-        if (!o.soldOut) ...[
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('Quantity', style: t.titleMedium),
-            Row(children: [
-              IconButton(icon: const Icon(Icons.remove_circle_outline),
-                onPressed: _qty > 1 && !_busy ? () => setState(() => _qty--) : null),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(color: s.primaryContainer,
-                  borderRadius: BorderRadius.circular(8)),
-                child: Text('$_qty', style: t.titleMedium?.copyWith(color: s.onPrimaryContainer))),
-              IconButton(icon: const Icon(Icons.add_circle_outline),
-                onPressed: _qty < o.quantity && !_busy ? () => setState(() => _qty++) : null),
-            ]),
-          ]),
-          const SizedBox(height: 8),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('Total', style: t.titleMedium),
-            Text(fPrice(o.discountedPrice * _qty),
-              style: t.titleLarge?.copyWith(color: s.primary, fontWeight: FontWeight.bold)),
-          ]),
-          const SizedBox(height: 20),
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(title: const Text('Offer Details')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Hero banner
+          NeoCard(
+            color: AppColors.black,
+            padding: const EdgeInsets.all(0),
+            child: SizedBox(
+              height: 160,
+              child: Stack(
+                children: [
+                  Center(
+                    child: Icon(categoryIcon(o.category), size: 80, color: Colors.white.withAlpha(60)),
+                  ),
+                  Positioned(
+                    top: 16, right: 16,
+                    child: NeoTag(
+                      label: '-${o.discountPercent}%',
+                      color: AppColors.yellow,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 16, left: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(o.title,
+                          style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w900,
+                            fontSize: 20, shadows: [Shadow(color: Colors.black, blurRadius: 4)])),
+                        Text(o.merchantName,
+                          style: const TextStyle(color: Colors.white70, fontSize: 13,
+                            fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Price + category
+          Row(
+            children: [
+              Expanded(
+                child: NeoCard(
+                  color: AppColors.cardYellow,
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Price', style: TextStyle(fontSize: 11,
+                          fontWeight: FontWeight.w700, color: Colors.black54)),
+                      const SizedBox(height: 4),
+                      Text(fPrice(o.discountedPrice),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                      Text(fPrice(o.originalPrice),
+                        style: const TextStyle(fontSize: 12, color: Colors.black38,
+                            decoration: TextDecoration.lineThrough)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: NeoCard(
+                  color: AppColors.cardGreen,
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Available', style: TextStyle(fontSize: 11,
+                          fontWeight: FontWeight.w700, color: Colors.black54)),
+                      const SizedBox(height: 4),
+                      Text(o.soldOut ? 'Sold out' : '${o.quantity} units',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900,
+                            color: o.soldOut ? AppColors.red : AppColors.black)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Pickup
+          NeoCard(
+            color: AppColors.cardOrange,
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                const Icon(Icons.schedule, color: AppColors.black),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Pickup window', style: TextStyle(fontSize: 11,
+                        fontWeight: FontWeight.w700, color: Colors.black54)),
+                    Text(fPickup(o.pickupStart, o.pickupEnd),
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Description
+          NeoCard(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Description', style: TextStyle(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 6),
+                Text(o.description, style: const TextStyle(color: Colors.black87, height: 1.4)),
+              ],
+            ),
+          ),
+
+          if (!o.soldOut) ...[
+            const SizedBox(height: 20),
+            // Quantity selector
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Quantity',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                Row(
+                  children: [
+                    NeoOutlineButton(
+                      label: '−',
+                      onPressed: _qty > 1 && !_busy ? () => setState(() => _qty--) : null,
+                      borderColor: AppColors.black,
+                    ),
+                    Container(
+                      width: 56, height: 48,
+                      decoration: const BoxDecoration(
+                        border: Border.symmetric(
+                            horizontal: BorderSide(color: AppColors.black, width: 2)),
+                      ),
+                      child: Center(
+                        child: Text('$_qty',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20)),
+                      ),
+                    ),
+                    NeoOutlineButton(
+                      label: '+',
+                      onPressed: _qty < o.quantity && !_busy ? () => setState(() => _qty++) : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.black54)),
+                Text(fPrice(o.discountedPrice * _qty),
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: AppColors.black)),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          NeoButton(
+            label: o.soldOut ? 'Sold out' : 'Reserve now',
+            icon: o.soldOut ? null : Icons.shopping_bag_outlined,
+            color: o.soldOut ? Colors.grey.shade300 : AppColors.yellow,
+            onPressed: o.soldOut || _busy ? null : _reserve,
+            isLoading: _busy,
+          ),
+          const SizedBox(height: 24),
         ],
-        ElevatedButton(onPressed: o.soldOut || _busy ? null : _reserve,
-          child: _busy ? const SizedBox(height: 22, width: 22,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : Text(o.soldOut ? 'Sold out' : 'Reserve now')),
-      ]));
+      ),
+    );
   }
 }
