@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../config/app_theme.dart';
 import 'neo_widgets.dart';
 

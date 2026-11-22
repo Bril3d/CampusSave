@@ -4,14 +4,12 @@ import '../services/api_service.dart';
 class PaymentException implements Exception {
   final String message;
   const PaymentException(this.message);
-  @override
-  String toString() => message;
+  @override String toString() => message;
 }
 
 class PaymentResult {
   /// Non-null when PAYMENT_PROVIDER=konnect; open in browser.
   final String? payUrl;
-
   /// true when PAYMENT_PROVIDER=mock; payment is already confirmed server-side.
   final bool confirmed;
   const PaymentResult({this.payUrl, this.confirmed = false});
@@ -20,9 +18,7 @@ class PaymentResult {
 /// POST /api/orders/:id/mock-pay   (PAYMENT_PROVIDER=mock → { ok: true })
 /// POST /api/orders/:id/pay        (konnect → { payUrl: "..." })
 class PaymentRepository {
-  PaymentRepository({ApiService? api}) : _api = api ?? ApiService();
-
-  final ApiService _api;
+  final _api = ApiService();
 
   Future<PaymentResult> pay(Order order) async {
     // 1. Try mock-pay (works when backend has PAYMENT_PROVIDER=mock).
@@ -41,12 +37,9 @@ class PaymentRepository {
   Future<PaymentResult> _payKonnect(Order order) async {
     try {
       final data = await _api.post('/api/orders/${order.id}/pay', body: {});
-      final url = data['payUrl'] as String?;
-      if (url == null)
-        throw const PaymentException('No payUrl returned from backend.');
+      final url  = data['payUrl'] as String?;
+      if (url == null) throw const PaymentException('No payUrl returned from backend.');
       return PaymentResult(payUrl: url);
-    } on ApiException catch (e) {
-      throw PaymentException(e.message);
-    }
+    } on ApiException catch (e) { throw PaymentException(e.message); }
   }
 }

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-
 import '../../services/auth_service.dart';
 import '../../utils/validators.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
-  @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  @override State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
@@ -27,11 +25,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final nav = Navigator.of(context);
     try {
       await AuthService().sendPasswordReset(_ec.text);
-      msg.showSnackBar(
-        const SnackBar(
-          content: Text('If this email exists, a reset link has been sent.'),
-        ),
-      );
+      msg.showSnackBar(const SnackBar(
+          content: Text('If this email exists, a reset link has been sent.')));
       nav.pop();
     } on AuthException catch (e) {
       msg.showSnackBar(SnackBar(content: Text(e.message)));
@@ -81,9 +76,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               height: 22,
                               width: 22,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Send reset link'),
                     ),

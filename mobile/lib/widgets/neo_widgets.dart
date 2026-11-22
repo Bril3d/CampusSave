@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../config/app_theme.dart';
 
 /// Card with thick border + hard offset shadow (Neo-Brutalism).
@@ -105,9 +104,7 @@ class NeoButton extends StatelessWidget {
                       height: 22,
                       width: 22,
                       child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: AppColors.black,
-                      ),
+                          strokeWidth: 2.5, color: AppColors.black),
                     )
                   : Row(
                       mainAxisSize: MainAxisSize.min,
@@ -221,11 +218,7 @@ class NeoTag extends StatelessWidget {
           BorderSide(color: AppColors.black, width: 1.5),
         ),
         boxShadow: const [
-          BoxShadow(
-            color: AppColors.black,
-            offset: Offset(2, 2),
-            blurRadius: 0,
-          ),
+          BoxShadow(color: AppColors.black, offset: Offset(2, 2), blurRadius: 0),
         ],
       ),
       child: Row(

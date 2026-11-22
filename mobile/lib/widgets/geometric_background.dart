@@ -1,7 +1,5 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-
 import '../config/app_theme.dart';
 
 /// Tunisian-inspired geometric background (zellige / star pattern).
