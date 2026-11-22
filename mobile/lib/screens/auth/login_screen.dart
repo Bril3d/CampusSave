@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../config/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../utils/validators.dart';
@@ -9,7 +10,8 @@ import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-  @override State<LoginScreen> createState() => _LoginScreenState();
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -32,7 +34,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await AuthService().signIn(email: _ec.text, password: _pc.text);
     } on AuthException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } finally {
       if (mounted) setState(() => _load = false);
     }
@@ -61,12 +64,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.yellow,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.black, width: 2.5),
+                            border: Border.all(
+                              color: AppColors.black,
+                              width: 2.5,
+                            ),
                             boxShadow: const [
-                              BoxShadow(color: AppColors.black, offset: Offset(3, 3), blurRadius: 0),
+                              BoxShadow(
+                                color: AppColors.black,
+                                offset: Offset(3, 3),
+                                blurRadius: 0,
+                              ),
                             ],
                           ),
-                          child: const Icon(Icons.eco, color: AppColors.black, size: 32),
+                          child: const Icon(
+                            Icons.eco,
+                            color: AppColors.black,
+                            size: 32,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         const Column(
@@ -125,9 +139,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 suffixIcon: IconButton(
-                                  icon: Icon(_obs
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined),
+                                  icon: Icon(
+                                    _obs
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
                                   onPressed: () => setState(() => _obs = !_obs),
                                 ),
                               ),
@@ -139,14 +155,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onPressed: _load
                                     ? null
                                     : () => Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (_) => const ForgotPasswordScreen()),
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const ForgotPasswordScreen(),
                                         ),
+                                      ),
                                 child: const Text(
                                   'Forgot password?',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.black),
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.black,
+                                  ),
                                 ),
                               ),
                             ),
@@ -162,12 +181,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     NeoCard(
                       color: AppColors.cardGreen,
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 20,
+                      ),
                       onTap: _load
                           ? null
                           : () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
                               ),
+                            ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -178,7 +202,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             'Register →',
                             style: TextStyle(
-                                fontWeight: FontWeight.w900, color: AppColors.black),
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.black,
+                            ),
                           ),
                         ],
                       ),
@@ -186,7 +212,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 20),
                     Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.cardYellow,
                           borderRadius: BorderRadius.circular(6),
@@ -194,7 +223,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: const Text(
                           '🔑 Admin: admin@campussave.tn',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),

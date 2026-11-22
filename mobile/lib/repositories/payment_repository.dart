@@ -1,43 +1,52 @@
 import '../models/order.dart';
-import '../models/payment.dart';
-import 'order_repository.dart';
+import '../services/api_service.dart';
 
 class PaymentException implements Exception {
   final String message;
   const PaymentException(this.message);
-  @override String toString() => message;
+  @override
+  String toString() => message;
 }
 
-class FakePaymentRepository {
-  FakePaymentRepository._();
-  static final FakePaymentRepository _i = FakePaymentRepository._();
-  factory FakePaymentRepository() => _i;
+class PaymentResult {
+  /// Non-null when PAYMENT_PROVIDER=konnect; open in browser.
+  final String? payUrl;
 
-  final Map<String, PaymentSession> _sessions = {};
-  final Map<String, PaymentStatus> _statuses = {};
-  int _c = 0;
+  /// true when PAYMENT_PROVIDER=mock; payment is already confirmed server-side.
+  final bool confirmed;
+  const PaymentResult({this.payUrl, this.confirmed = false});
+}
 
-  Future<PaymentSession> createPayment(Order order) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    final cur = FakeOrderRepository().find(order.id);
-    if (cur == null) throw const PaymentException('Order not found.');
-    if (cur.status != OrderStatus.pendingPayment)
-      throw const PaymentException('This order cannot be paid.');
-    _c++;
-    final s = PaymentSession(id: 'pay$_c', orderId: cur.id, amount: cur.total);
-    _sessions[s.id] = s;
-    _statuses[s.id] = PaymentStatus.pending;
-    return s;
+/// POST /api/orders/:id/mock-pay   (PAYMENT_PROVIDER=mock → { ok: true })
+/// POST /api/orders/:id/pay        (konnect → { payUrl: "..." })
+class PaymentRepository {
+  PaymentRepository({ApiService? api}) : _api = api ?? ApiService();
+
+  final ApiService _api;
+
+  Future<PaymentResult> pay(Order order) async {
+    // 1. Try mock-pay (works when backend has PAYMENT_PROVIDER=mock).
+    try {
+      await _api.post('/api/orders/${order.id}/mock-pay', body: {});
+      return const PaymentResult(confirmed: true);
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        // Not in mock mode → use Konnect.
+        return _payKonnect(order);
+      }
+      throw PaymentException(e.message);
+    }
   }
 
-  void simulateOutcome(String paymentId, {required bool success}) {
-    if (_statuses[paymentId] != PaymentStatus.pending) return;
-    _statuses[paymentId] = success ? PaymentStatus.success : PaymentStatus.failed;
-    if (success) FakeOrderRepository().markPaid(_sessions[paymentId]!.orderId);
-  }
-
-  Future<PaymentStatus> getStatus(String paymentId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    return _statuses[paymentId] ?? (throw const PaymentException('Payment not found.'));
+  Future<PaymentResult> _payKonnect(Order order) async {
+    try {
+      final data = await _api.post('/api/orders/${order.id}/pay', body: {});
+      final url = data['payUrl'] as String?;
+      if (url == null)
+        throw const PaymentException('No payUrl returned from backend.');
+      return PaymentResult(payUrl: url);
+    } on ApiException catch (e) {
+      throw PaymentException(e.message);
+    }
   }
 }

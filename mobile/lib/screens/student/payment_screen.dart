@@ -1,90 +1,166 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../config/app_theme.dart';
 import '../../models/order.dart';
-import '../../models/payment.dart';
 import '../../repositories/payment_repository.dart';
 import '../../utils/formatters.dart';
-import '../../widgets/state_views.dart';
+import '../../widgets/neo_widgets.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Order order;
   const PaymentScreen({super.key, required this.order});
-  @override State<PaymentScreen> createState() => _State();
+  @override
+  State<PaymentScreen> createState() => _State();
 }
+
 class _State extends State<PaymentScreen> {
-  late Future<PaymentSession> _fut;
   bool _busy = false;
-  @override void initState() { super.initState(); _fut = FakePaymentRepository().createPayment(widget.order); }
-  void _retry() => setState(() => _fut = FakePaymentRepository().createPayment(widget.order));
+  String? _error;
 
-  Future<void> _finish(PaymentSession session, bool success) async {
-    final msg = ScaffoldMessenger.of(context);
+  Future<void> _pay() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     final nav = Navigator.of(context);
-    setState(() => _busy = true);
     try {
-      FakePaymentRepository().simulateOutcome(session.id, success: success);
-      final status = await FakePaymentRepository().getStatus(session.id);
-      if (status == PaymentStatus.success) { nav.pop(true); return; }
-      msg.showSnackBar(const SnackBar(content: Text('Payment failed. Please try again.')));
-      if (mounted) _retry();
+      final result = await PaymentRepository().pay(widget.order);
+      if (!mounted) return;
+      if (result.confirmed) {
+        nav.pop(true); // back to orders; caller refetches to get qrToken
+      } else if (result.payUrl != null) {
+        final paymentUri = Uri.tryParse(result.payUrl!);
+        final opened =
+            paymentUri != null &&
+            await launchUrl(paymentUri, mode: LaunchMode.externalApplication);
+        if (!mounted) return;
+        if (!opened) {
+          setState(
+            () => _error = 'Unable to open the payment page. Please try again.',
+          );
+        }
+      }
     } on PaymentException catch (e) {
-      msg.showSnackBar(SnackBar(content: Text(e.message)));
-    } finally { if (mounted) setState(() => _busy = false); }
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
-  @override Widget build(BuildContext c) {
-    final s = Theme.of(c).colorScheme;
-    return Scaffold(appBar: AppBar(title: const Text('Payment')),
-      body: FutureBuilder<PaymentSession>(future: _fut,
-        builder: (c, snap) {
-          if (snap.connectionState != ConnectionState.done) return const LoadingView();
-          if (snap.hasError) return ErrorView(
-            message: snap.error is PaymentException ? snap.error.toString() : 'Could not start payment.',
-            onRetry: _retry);
-          final session = snap.data!;
-          return ListView(padding: const EdgeInsets.all(24), children: [
-            Container(padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: s.secondaryContainer,
-                borderRadius: BorderRadius.circular(14)),
-              child: Row(children: [
-                Icon(Icons.science_outlined, color: s.onSecondaryContainer),
-                const SizedBox(width: 10),
-                Expanded(child: Text('Demo payment – Konnect test mode will replace this once backend is connected.',
-                  style: TextStyle(color: s.onSecondaryContainer, fontSize: 13))),
-              ])),
-            const SizedBox(height: 24),
-            Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Order Summary', style: Theme.of(c).textTheme.titleMedium),
-              const SizedBox(height: 12),
-              _row('Item', widget.order.offerTitle),
-              _row('Merchant', widget.order.merchantName),
-              _row('Quantity', '${widget.order.quantity}'),
-              _row('Pickup', fPickup(widget.order.pickupStart, widget.order.pickupEnd)),
-              const Divider(height: 24),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text('Total', style: Theme.of(c).textTheme.titleLarge),
-                Text(fPrice(session.amount),
-                  style: Theme.of(c).textTheme.titleLarge?.copyWith(
-                    color: s.primary, fontWeight: FontWeight.bold)),
-              ]),
-            ]))),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(icon: const Icon(Icons.check_circle_outline),
-              label: _busy ? const SizedBox(height: 20, width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Simulate successful payment'),
-              onPressed: _busy ? null : () => _finish(session, true)),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(icon: const Icon(Icons.cancel_outlined),
-              label: const Text('Simulate failed payment'),
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red)),
-              onPressed: _busy ? null : () => _finish(session, false)),
-          ]);
-        }));
+  @override
+  Widget build(BuildContext context) {
+    final o = widget.order;
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(title: const Text('Payment')),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          NeoCard(
+            color: AppColors.cardYellow,
+            padding: const EdgeInsets.all(16),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Make sure the backend is running with PAYMENT_PROVIDER=mock '
+                    'in .env to enable instant payment confirmation.',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          NeoCard(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Order Summary',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                ),
+                const SizedBox(height: 14),
+                _row('Item', o.title),
+                _row('Quantity', '${o.quantity}'),
+                if (o.expiresAt != null) _row('Expires', fTime(o.expiresAt!)),
+                const Divider(
+                  height: 24,
+                  thickness: 1.5,
+                  color: AppColors.black,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                      ),
+                    ),
+                    Text(
+                      fPrice(o.total),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 14),
+            NeoCard(
+              color: const Color(0xFFFFE5E5),
+              padding: const EdgeInsets.all(14),
+              child: Text(
+                _error!,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          NeoButton(
+            label: 'Pay now',
+            icon: Icons.payment,
+            onPressed: _busy ? null : _pay,
+            isLoading: _busy,
+          ),
+        ],
+      ),
+    );
   }
-  Widget _row(String k, String v) => Padding(padding: const EdgeInsets.symmetric(vertical: 3),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(k, style: const TextStyle(color: Colors.grey)),
-        Flexible(child: Text(v, textAlign: TextAlign.end))]));
+
+  Widget _row(String k, String v) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          k,
+          style: const TextStyle(
+            color: Colors.black54,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Flexible(
+          child: Text(
+            v,
+            textAlign: TextAlign.end,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -1,56 +1,61 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/models/order.dart';
-import 'package:mobile/repositories/offer_repository.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mobile/repositories/order_repository.dart';
+import 'package:mobile/services/api_service.dart';
 
 void main() {
-  test('createOrder reduces stock and cancelOrder restores it', () async {
-    final offers = FakeOfferRepository();
-    final orders = FakeOrderRepository();
+  test('creates an order using the backend order endpoint', () async {
+    late http.Request captured;
+    final api = ApiService(
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response(jsonEncode({'id': 'order-123'}), 201);
+      }),
+      tokenProvider: () async => 'student-token',
+    );
+    final repository = OrderRepository(api: api);
 
-    final before =
-        (await offers.fetchOffers()).firstWhere((o) => o.id == 'demo-1');
-    final order = await orders.createOrder(offer: before, quantity: 2);
+    final id = await repository.create(offerId: 'offer-1', quantity: 2);
 
-    expect(order.status, OrderStatus.pendingPayment);
-    expect(order.total, before.discountedPrice * 2);
-
-    var after =
-        (await offers.fetchOffers()).firstWhere((o) => o.id == 'demo-1');
-    expect(after.quantity, before.quantity - 2);
-
-    final cancelled = await orders.cancelOrder(order.id);
-    expect(cancelled.status, OrderStatus.cancelled);
-
-    after = (await offers.fetchOffers()).firstWhere((o) => o.id == 'demo-1');
-    expect(after.quantity, before.quantity);
+    expect(id, 'order-123');
+    expect(captured.method, 'POST');
+    expect(captured.url.path, '/api/orders');
+    expect(jsonDecode(captured.body), {'offerId': 'offer-1', 'quantity': 2});
+    expect(captured.headers['authorization'], 'Bearer student-token');
   });
 
-  test('rejects sold out offers, zero quantity and too large quantity',
-      () async {
-    final offers = FakeOfferRepository();
-    final orders = FakeOrderRepository();
-    final all = await offers.fetchOffers();
+  test('cancels an order through the backend endpoint', () async {
+    late http.Request captured;
+    final api = ApiService(
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response('{"ok":true}', 200);
+      }),
+      tokenProvider: () async => 'student-token',
+    );
+    final repository = OrderRepository(api: api);
 
-    final soldOut = all.firstWhere((o) => o.id == 'demo-5');
-    expect(orders.createOrder(offer: soldOut, quantity: 1),
-        throwsA(isA<OrderException>()));
+    await repository.cancel('order-123');
 
-    final offer = all.firstWhere((o) => o.id == 'demo-2');
-    expect(orders.createOrder(offer: offer, quantity: 0),
-        throwsA(isA<OrderException>()));
-    expect(orders.createOrder(offer: offer, quantity: offer.quantity + 1),
-        throwsA(isA<OrderException>()));
+    expect(captured.method, 'POST');
+    expect(captured.url.path, '/api/orders/order-123/cancel');
   });
 
-  test('a cancelled order cannot be cancelled twice', () async {
-    final offers = FakeOfferRepository();
-    final orders = FakeOrderRepository();
-    final offer =
-        (await offers.fetchOffers()).firstWhere((o) => o.id == 'demo-4');
+  test('converts backend errors into OrderException', () async {
+    final api = ApiService(
+      client: MockClient(
+        (_) async => http.Response('{"error":"Stock insuffisant"}', 400),
+      ),
+      tokenProvider: () async => 'student-token',
+    );
+    final repository = OrderRepository(api: api);
 
-    final order = await orders.createOrder(offer: offer, quantity: 1);
-    await orders.cancelOrder(order.id);
-    expect(orders.cancelOrder(order.id), throwsA(isA<OrderException>()));
+    expect(
+      repository.create(offerId: 'offer-1', quantity: 2),
+      throwsA(isA<OrderException>()),
+    );
   });
 }

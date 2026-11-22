@@ -5,5 +5,10 @@ class PaymentSession {
   final String orderId;
   final double amount;
   final String? paymentUrl;
-  PaymentSession({required this.id, required this.orderId, required this.amount, this.paymentUrl});
+  PaymentSession({
+    required this.id,
+    required this.orderId,
+    required this.amount,
+    this.paymentUrl,
+  });
 }

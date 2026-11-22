@@ -1,79 +1,166 @@
 import 'package:flutter/material.dart';
+
+import '../../config/app_theme.dart';
 import '../../repositories/admin_repository.dart';
-import '../../models/merchant_info.dart';
+import '../../widgets/neo_widgets.dart';
+import '../../widgets/state_views.dart';
 
-// In a real app, users are listed from Firebase Auth via the backend.
-// This demo shows registered merchants and simulates students.
-class UsersTab extends StatelessWidget {
+class UsersTab extends StatefulWidget {
   const UsersTab({super.key});
-
-  @override Widget build(BuildContext c) {
-    final merchants = FakeAdminRepository().merchants;
-    final demoStudents = [
-      {'name': 'Ahmed Ben Ali', 'email': 'ahmed@student.essect.tn', 'role': 'Student'},
-      {'name': 'Sarra Trabelsi', 'email': 'sarra@student.essect.tn', 'role': 'Student'},
-      {'name': 'Youssef Hamdi', 'email': 'youssef@student.essect.tn', 'role': 'Student'},
-    ];
-    return ListView(padding: const EdgeInsets.all(16), children: [
-      Container(padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(10)),
-        child: const Row(children: [
-          Icon(Icons.info_outline, color: Colors.blue, size: 18),
-          SizedBox(width: 8),
-          Expanded(child: Text(
-            'Real user list requires the backend API. '
-            'Merchants registered in this session are shown below.',
-            style: TextStyle(fontSize: 12, color: Colors.blue))),
-        ])),
-      const SizedBox(height: 16),
-      Text('Students (demo)', style: Theme.of(c).textTheme.titleSmall
-        ?.copyWith(color: Colors.grey)),
-      const SizedBox(height: 8),
-      ...demoStudents.map((s) => _UserTile(
-        name: s['name']!, email: s['email']!, role: s['role']!,
-        icon: Icons.school, color: Colors.indigo)),
-      const SizedBox(height: 16),
-      Text('Merchants (this session)', style: Theme.of(c).textTheme.titleSmall
-        ?.copyWith(color: Colors.grey)),
-      const SizedBox(height: 8),
-      if (merchants.isEmpty)
-        const Padding(padding: EdgeInsets.all(16), child: Text(
-          'No merchants registered in this session.',
-          style: TextStyle(color: Colors.grey))),
-      ...merchants.map((m) {
-        Color col; IconData icon; String role;
-        switch (m.status) {
-          case MerchantStatus.pending:
-            col = Colors.orange; icon = Icons.hourglass_top; role = 'Merchant (Pending)'; break;
-          case MerchantStatus.validated:
-            col = Colors.teal; icon = Icons.storefront; role = 'Merchant'; break;
-          case MerchantStatus.rejected:
-            col = Colors.red; icon = Icons.block; role = 'Merchant (Rejected)'; break;
-        }
-        return _UserTile(name: m.name, email: m.email, role: role,
-          icon: icon, color: col, subtitle: m.businessName);
-      }),
-    ]);
-  }
+  @override
+  State<UsersTab> createState() => _State();
 }
 
-class _UserTile extends StatelessWidget {
-  final String name, email, role; final String? subtitle;
-  final IconData icon; final Color color;
-  const _UserTile({required this.name, required this.email,
-    required this.role, required this.icon, required this.color, this.subtitle});
-  @override Widget build(BuildContext c) => Card(
-    margin: const EdgeInsets.only(bottom: 8),
-    child: ListTile(
-      leading: CircleAvatar(backgroundColor: color.withOpacity(0.15),
-        child: Icon(icon, color: color, size: 20)),
-      title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle != null ? '$email\n$subtitle' : email),
-      trailing: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8)),
-        child: Text(role, style: TextStyle(color: color, fontSize: 11,
-          fontWeight: FontWeight.w600))),
-      isThreeLine: subtitle != null));
+class _State extends State<UsersTab> {
+  final _repo = AdminRepository();
+  late Future<List<Map<String, dynamic>>> _fut;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _load() => setState(() => _fut = _repo.fetchUsers());
+
+  Future<void> _toggle(Map<String, dynamic> u) async {
+    final nowBlocked = u['blocked'] == true;
+    final willBlock = !nowBlocked;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(willBlock ? 'Block user' : 'Unblock user'),
+        content: Text(
+          '${willBlock ? "Block" : "Unblock"} ${u['name'] ?? u['email']}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(willBlock ? 'Block' : 'Unblock'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await _repo.setUserBlocked(
+        u['id'] as String? ?? u['uid'] as String,
+        blocked: willBlock,
+      );
+      if (mounted) _load();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fut,
+      builder: (_, snap) {
+        if (snap.connectionState != ConnectionState.done)
+          return const LoadingView();
+        if (snap.hasError)
+          return ErrorView(message: snap.error.toString(), onRetry: _load);
+        final users = snap.data ?? [];
+        if (users.isEmpty)
+          return const EmptyView(
+            message: 'No users yet.',
+            icon: Icons.people_outline,
+          );
+        return RefreshIndicator(
+          onRefresh: () async => _load(),
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: users.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (_, i) {
+              final u = users[i];
+              final role = u['role'] as String? ?? 'student';
+              final blocked = u['blocked'] == true;
+              Color col;
+              switch (role) {
+                case 'admin':
+                  col = AppColors.purple;
+                  break;
+                case 'merchant':
+                  col = AppColors.teal;
+                  break;
+                default:
+                  col = AppColors.green;
+              }
+              IconData icon;
+              switch (role) {
+                case 'admin':
+                  icon = Icons.admin_panel_settings;
+                  break;
+                case 'merchant':
+                  icon = Icons.storefront;
+                  break;
+                default:
+                  icon = Icons.school;
+              }
+              return NeoCard(
+                color: blocked ? Colors.grey.shade100 : Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: col.withAlpha(30),
+                      child: Icon(icon, color: col, size: 20),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            u['name'] ?? '—',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          Text(
+                            u['email'] ?? '',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    NeoTag(
+                      label: role,
+                      color: col.withAlpha(30),
+                      textColor: col,
+                    ),
+                    if (role != 'admin') ...[
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: Icon(
+                          blocked ? Icons.lock_open : Icons.block,
+                          color: blocked ? AppColors.green : AppColors.red,
+                          size: 20,
+                        ),
+                        onPressed: () => _toggle(u),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 }

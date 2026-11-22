@@ -34,17 +34,26 @@ void main() {
   });
 
   group('offerFilter', () {
-    final now = DateTime(2026, 11, 20, 12);
-    final end = now.add(const Duration(hours: 2));
-
-    Offer make(String id, String title, String shop, String cat,
-        double orig, double price) =>
-        Offer(
-          id: id, merchantId: 'mid', merchantName: shop,
-          title: title, description: '', category: cat,
-          originalPrice: orig, discountedPrice: price,
-          quantity: 5, pickupStart: now, pickupEnd: end,
-        );
+    Offer make(
+      String id,
+      String title,
+      String shop,
+      String cat,
+      double orig,
+      double price,
+    ) => Offer(
+      id: id,
+      shopId: 'mid',
+      shopName: shop,
+      title: title,
+      description: '',
+      category: cat,
+      originalPrice: orig,
+      price: price,
+      quantity: 5,
+      pickupFrom: '12:00',
+      pickupTo: '14:00',
+    );
 
     final offers = [
       make('1', 'Chicken sandwich', 'Cafe A', 'Meals', 8, 4),

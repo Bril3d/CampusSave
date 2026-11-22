@@ -32,6 +32,19 @@ flutter run -d <EMULATOR_ID>
 flutter run -d chrome
 ```
 
+### Backend connection
+
+The API defaults to `http://localhost:4000` on Windows desktop and in Chrome/Edge,
+and to `http://10.0.2.2:4000` on the Android emulator. Start the backend in
+`C:\Users\WAJDI\CampusSave\backend` with `npm run dev` before opening profile,
+orders, or dashboards. For a physical phone, pass your computer's LAN address:
+
+```powershell
+flutter run --dart-define=API_BASE_URL=http://192.168.1.10:4000
+```
+
+Replace `192.168.1.10` with the computer's local network address.
+
 ---
 
 ## 🔑 Admin account

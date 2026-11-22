@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../config/app_theme.dart';
 import '../models/offer.dart';
 import '../utils/formatters.dart';
@@ -11,39 +12,38 @@ final _cardColors = [
   AppColors.cardBlue,
 ];
 
-Color _colorForOffer(Offer o) {
-  final idx = o.id.hashCode.abs() % _cardColors.length;
-  return _cardColors[idx];
-}
+Color _colorForOffer(Offer o) =>
+    _cardColors[o.id.hashCode.abs() % _cardColors.length];
 
 class OfferCard extends StatelessWidget {
   final Offer offer;
   final VoidCallback onTap;
-
   const OfferCard({super.key, required this.offer, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = _colorForOffer(offer);
     return NeoCard(
-      color: cardColor,
+      color: _colorForOffer(offer),
       padding: EdgeInsets.zero,
       onTap: onTap,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Color stripe + icon
           Container(
             width: 72,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.black,
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(6)),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 20),
-                Icon(categoryIcon(offer.category), color: Colors.white, size: 28),
+                Icon(
+                  categoryIcon(offer.category),
+                  color: Colors.white,
+                  size: 28,
+                ),
                 const SizedBox(height: 8),
                 NeoTag(
                   label: '-${offer.discountPercent}%',
@@ -53,7 +53,6 @@ class OfferCard extends StatelessWidget {
               ],
             ),
           ),
-          // Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(14),
@@ -84,7 +83,7 @@ class OfferCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    offer.merchantName,
+                    offer.shopName, // ← was merchantName
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
@@ -97,7 +96,7 @@ class OfferCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        fPrice(offer.discountedPrice),
+                        fPrice(offer.price), // ← was discountedPrice
                         style: const TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 17,
@@ -118,10 +117,17 @@ class OfferCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.schedule, size: 13, color: Colors.black54),
+                      const Icon(
+                        Icons.schedule,
+                        size: 13,
+                        color: Colors.black54,
+                      ),
                       const SizedBox(width: 4),
                       Text(
-                        fPickup(offer.pickupStart, offer.pickupEnd),
+                        fPickup(
+                          offer.pickupFrom,
+                          offer.pickupTo,
+                        ), // ← was pickupStart/End
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,

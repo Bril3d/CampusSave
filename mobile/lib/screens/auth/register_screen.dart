@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
+
 import '../../models/user_role.dart';
 import '../../services/auth_service.dart';
 import '../../utils/validators.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-  @override State<RegisterScreen> createState() => _RegisterScreenState();
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _fk  = GlobalKey<FormState>();
-  final _nc  = TextEditingController();
-  final _ec  = TextEditingController();
-  final _pc  = TextEditingController();
-  final _cc  = TextEditingController();
-  final _bc  = TextEditingController();
+  final _fk = GlobalKey<FormState>();
+  final _nc = TextEditingController();
+  final _ec = TextEditingController();
+  final _pc = TextEditingController();
+  final _cc = TextEditingController();
+  final _bc = TextEditingController();
   UserRole _role = UserRole.student;
   bool _load = false, _obs = true;
 
   @override
   void dispose() {
-    _nc.dispose(); _ec.dispose(); _pc.dispose();
-    _cc.dispose(); _bc.dispose();
+    _nc.dispose();
+    _ec.dispose();
+    _pc.dispose();
+    _cc.dispose();
+    _bc.dispose();
     super.dispose();
   }
 
@@ -63,8 +68,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Who are you?',
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Who are you?',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
@@ -73,7 +80,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: 'Student',
                             icon: Icons.school,
                             selected: _role == UserRole.student,
-                            onTap: () => setState(() => _role = UserRole.student),
+                            onTap: () =>
+                                setState(() => _role = UserRole.student),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -82,7 +90,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: 'Merchant',
                             icon: Icons.storefront,
                             selected: _role == UserRole.merchant,
-                            onTap: () => setState(() => _role = UserRole.merchant),
+                            onTap: () =>
+                                setState(() => _role = UserRole.merchant),
                           ),
                         ),
                       ],
@@ -97,16 +106,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline,
-                                size: 16, color: s.onSecondaryContainer),
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: s.onSecondaryContainer,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'Your account will be reviewed by admin '
                                 'before activation.',
                                 style: TextStyle(
-                                    fontSize: 12,
-                                    color: s.onSecondaryContainer),
+                                  fontSize: 12,
+                                  color: s.onSecondaryContainer,
+                                ),
                               ),
                             ),
                           ],
@@ -122,8 +135,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Full name',
                         prefixIcon: Icon(Icons.person_outline),
                       ),
-                      validator: (v) =>
-                          Validators.required(v, label: 'Name'),
+                      validator: (v) => Validators.required(v, label: 'Name'),
                     ),
                     if (_role == UserRole.merchant) ...[
                       const SizedBox(height: 14),
@@ -160,9 +172,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
-                          icon: Icon(_obs
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
+                          icon: Icon(
+                            _obs
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
                           onPressed: () => setState(() => _obs = !_obs),
                         ),
                       ),
@@ -178,8 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         labelText: 'Confirm password',
                         prefixIcon: Icon(Icons.lock_outline),
                       ),
-                      validator: (v) =>
-                          Validators.confirmPassword(v, _pc.text),
+                      validator: (v) => Validators.confirmPassword(v, _pc.text),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
@@ -189,7 +202,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               height: 22,
                               width: 22,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Text('Register'),
                     ),
@@ -229,7 +244,9 @@ class _RoleChip extends StatelessWidget {
           color: selected ? s.primary : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: selected ? s.primary : Colors.grey.shade300, width: 2),
+            color: selected ? s.primary : Colors.grey.shade300,
+            width: 2,
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

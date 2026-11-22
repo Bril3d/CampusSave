@@ -6,6 +6,11 @@ class MerchantInfo {
   final String email;
   final String businessName;
   MerchantStatus status;
-  MerchantInfo({required this.uid, required this.name, required this.email,
-    required this.businessName, this.status = MerchantStatus.pending});
+  MerchantInfo({
+    required this.uid,
+    required this.name,
+    required this.email,
+    required this.businessName,
+    this.status = MerchantStatus.pending,
+  });
 }

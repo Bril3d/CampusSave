@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../config/app_theme.dart';
 import '../widgets/geometric_background.dart';
 
@@ -24,7 +25,11 @@ class SplashScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppColors.black, width: 3),
                   boxShadow: const [
-                    BoxShadow(color: AppColors.black, offset: Offset(6, 6), blurRadius: 0),
+                    BoxShadow(
+                      color: AppColors.black,
+                      offset: Offset(6, 6),
+                      blurRadius: 0,
+                    ),
                   ],
                 ),
                 child: const Icon(Icons.eco, size: 60, color: AppColors.black),
@@ -32,13 +37,20 @@ class SplashScreen extends StatelessWidget {
               const SizedBox(height: 28),
               // Title
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.black, width: 2.5),
                   boxShadow: const [
-                    BoxShadow(color: AppColors.black, offset: Offset(4, 4), blurRadius: 0),
+                    BoxShadow(
+                      color: AppColors.black,
+                      offset: Offset(4, 4),
+                      blurRadius: 0,
+                    ),
                   ],
                 ),
                 child: const Text(
@@ -55,7 +67,10 @@ class SplashScreen extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.orange,
                   borderRadius: BorderRadius.circular(6),

@@ -1,36 +1,38 @@
 import 'package:flutter/material.dart';
+
 import '../../config/app_theme.dart';
-import '../../models/merchant_info.dart';
 import '../../repositories/admin_repository.dart';
-import '../../repositories/offer_repository.dart';
 import '../../widgets/neo_widgets.dart';
 import '../../widgets/stat_card.dart';
+import '../../widgets/state_views.dart';
 
-class AdminDashboardTab extends StatelessWidget {
+class AdminDashboardTab extends StatefulWidget {
   const AdminDashboardTab({super.key});
+  @override
+  State<AdminDashboardTab> createState() => _State();
+}
 
-  Future<Map<String, dynamic>> _stats() async {
-    final offers = await FakeOfferRepository().fetchAll();
-    final merchants = FakeAdminRepository().merchants;
-    final pending   = merchants.where((m) => m.status == MerchantStatus.pending).length;
-    final validated = merchants.where((m) => m.status == MerchantStatus.validated).length;
-    return {
-      'offers':    offers.length,
-      'merchants': validated,
-      'pending':   pending,
-      'orders':    42 + pending * 3,
-      'revenue':   1250.0 + validated * 150.0,
-      'students':  128 + pending,
-    };
+class _State extends State<AdminDashboardTab> {
+  late Future<Map<String, dynamic>> _fut;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
   }
+
+  void _load() => setState(() => _fut = AdminRepository().fetchStats());
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
-      future: _stats(),
-      builder: (context, snap) {
-        if (!snap.hasData) return const Center(child: CircularProgressIndicator(color: AppColors.black));
+      future: _fut,
+      builder: (_, snap) {
+        if (!snap.hasData && !snap.hasError) return const LoadingView();
+        if (snap.hasError)
+          return ErrorView(message: snap.error.toString(), onRetry: _load);
         final d = snap.data!;
+        final rev = (d['revenue'] as num?)?.toDouble() ?? 0.0;
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -40,57 +42,101 @@ class AdminDashboardTab extends StatelessWidget {
               child: Row(
                 children: [
                   Container(
-                    width: 48, height: 48,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: AppColors.yellow,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: const Icon(Icons.admin_panel_settings, color: AppColors.black),
+                    child: const Icon(
+                      Icons.admin_panel_settings,
+                      color: AppColors.black,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('ADMIN PANEL',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900,
-                            fontSize: 16, letterSpacing: 1)),
-                      Text('Platform Overview',
-                        style: TextStyle(color: Colors.white60, fontSize: 12)),
+                      Text(
+                        'ADMIN PANEL',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      Text(
+                        'Platform Overview',
+                        style: TextStyle(color: Colors.white60, fontSize: 12),
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            const Text('Platform Stats',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.black)),
+            const Text(
+              'Platform Stats',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
             const SizedBox(height: 12),
             GridView.count(
-              crossAxisCount: 2, shrinkWrap: true,
+              crossAxisCount: 2,
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12, mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
               childAspectRatio: 1.3,
               children: [
-                StatCard(label: 'Students',    value: '${d['students']}',  icon: Icons.school,       color: AppColors.teal),
-                StatCard(label: 'Merchants',   value: '${d['merchants']}', icon: Icons.storefront,   color: AppColors.green),
-                StatCard(label: 'Offers',      value: '${d['offers']}',    icon: Icons.local_offer,  color: AppColors.orange),
-                StatCard(label: 'Orders',      value: '${d['orders']}',    icon: Icons.receipt_long, color: AppColors.purple),
+                StatCard(
+                  label: 'Students',
+                  value: '${d['students'] ?? 0}',
+                  icon: Icons.school,
+                  color: AppColors.teal,
+                ),
+                StatCard(
+                  label: 'Merchants',
+                  value: '${d['merchants'] ?? 0}',
+                  icon: Icons.storefront,
+                  color: AppColors.green,
+                ),
+                StatCard(
+                  label: 'Active offers',
+                  value: '${d['offers'] ?? 0}',
+                  icon: Icons.local_offer,
+                  color: AppColors.orange,
+                ),
+                StatCard(
+                  label: 'Total orders',
+                  value: '${d['orders'] ?? 0}',
+                  icon: Icons.receipt_long,
+                  color: AppColors.purple,
+                ),
               ],
             ),
             const SizedBox(height: 12),
             GridView.count(
-              crossAxisCount: 2, shrinkWrap: true,
+              crossAxisCount: 2,
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 12, mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
               childAspectRatio: 1.3,
               children: [
-                StatCard(label: 'Revenue (TND)',
-                  value: (d['revenue'] as double).toStringAsFixed(0),
-                  icon: Icons.payments, color: AppColors.yellow),
-                StatCard(label: 'Pending approval',
-                  value: '${d['pending']}',
-                  icon: Icons.pending_actions, color: AppColors.red),
+                StatCard(
+                  label: 'Revenue (TND)',
+                  value: rev.toStringAsFixed(2),
+                  icon: Icons.payments,
+                  color: AppColors.yellow,
+                ),
+                StatCard(
+                  label: 'Pending approval',
+                  value: '${d['pending'] ?? 0}',
+                  icon: Icons.pending_actions,
+                  color: AppColors.red,
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -100,11 +146,20 @@ class AdminDashboardTab extends StatelessWidget {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Quick Info', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-                  SizedBox(height: 10),
-                  _InfoRow(icon: Icons.admin_panel_settings, text: 'Admin: admin@campussave.tn'),
-                  _InfoRow(icon: Icons.science_outlined,     text: 'Demo mode — backend pending'),
-                  _InfoRow(icon: Icons.eco,                  text: 'Fighting food waste on campus!'),
+                  Text('Info', style: TextStyle(fontWeight: FontWeight.w900)),
+                  SizedBox(height: 8),
+                  _Info(
+                    icon: Icons.admin_panel_settings,
+                    text: 'Admin role: set role="admin" in Firestore manually',
+                  ),
+                  _Info(
+                    icon: Icons.warning_amber,
+                    text: 'Set PAYMENT_PROVIDER=mock in .env for local testing',
+                  ),
+                  _Info(
+                    icon: Icons.eco,
+                    text: 'CampusSave – Fight food waste!',
+                  ),
                 ],
               ),
             ),
@@ -115,24 +170,24 @@ class AdminDashboardTab extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _Info extends StatelessWidget {
   final IconData icon;
   final String text;
-
-  const _InfoRow({required this.icon, required this.text});
-
+  const _Info({required this.icon, required this.text});
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: AppColors.black),
-          const SizedBox(width: 8),
-          Expanded(child: Text(text,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(
+      children: [
+        Icon(icon, size: 15, color: Colors.black54),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -1,34 +1,36 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const black      = Color(0xFF1A1A1A);
-  static const cream      = Color(0xFFFFFCF0);
-  static const green      = Color(0xFF2BCC71);
-  static const yellow     = Color(0xFFFFE500);
-  static const orange     = Color(0xFFFF6B35);
-  static const teal       = Color(0xFF00C2B2);
-  static const purple     = Color(0xFF7C3AED);
-  static const red        = Color(0xFFFF3B5C);
+  static const black = Color(0xFF1A1A1A);
+  static const cream = Color(0xFFFFFCF0);
+  static const green = Color(0xFF2BCC71);
+  static const yellow = Color(0xFFFFE500);
+  static const orange = Color(0xFFFF6B35);
+  static const teal = Color(0xFF00C2B2);
+  static const blue = Color(0xFF2563EB);
+  static const purple = Color(0xFF7C3AED);
+  static const red = Color(0xFFFF3B5C);
   static const cardYellow = Color(0xFFFFFBD1);
-  static const cardGreen  = Color(0xFFE0FFF0);
+  static const cardGreen = Color(0xFFE0FFF0);
   static const cardOrange = Color(0xFFFFEEE5);
-  static const cardBlue   = Color(0xFFE6F4FF);
+  static const cardBlue = Color(0xFFE6F4FF);
 }
 
 class AppTheme {
   static const _border = BorderSide(color: AppColors.black, width: 2.5);
 
   static ThemeData get light {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.green,
-      secondary: AppColors.orange,
-      brightness: Brightness.light,
-    ).copyWith(
-      primary: AppColors.green,
-      secondary: AppColors.orange,
-      surface: AppColors.cream,
-      error: AppColors.red,
-    );
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.green,
+          secondary: AppColors.orange,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: AppColors.green,
+          secondary: AppColors.orange,
+          surface: AppColors.cream,
+          error: AppColors.red,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -67,8 +69,7 @@ class AppTheme {
             return AppColors.yellow;
           }),
           foregroundColor: WidgetStatePropertyAll(AppColors.black),
-          overlayColor: WidgetStatePropertyAll(
-              AppColors.black.withAlpha(20)),
+          overlayColor: WidgetStatePropertyAll(AppColors.black.withAlpha(20)),
           elevation: const WidgetStatePropertyAll(0),
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(52)),
           textStyle: const WidgetStatePropertyAll(
@@ -115,16 +116,24 @@ class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(8)),
           borderSide: BorderSide(color: AppColors.red, width: 3),
         ),
-        labelStyle: TextStyle(fontWeight: FontWeight.w600, color: AppColors.black),
+        labelStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: AppColors.black,
+        ),
       ),
       chipTheme: const ChipThemeData(
-        shape: StadiumBorder(side: BorderSide(color: AppColors.black, width: 1.5)),
+        shape: StadiumBorder(
+          side: BorderSide(color: AppColors.black, width: 1.5),
+        ),
         labelStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.black,
-        contentTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: const BorderSide(color: AppColors.yellow, width: 2),

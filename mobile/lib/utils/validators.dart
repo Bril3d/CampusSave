@@ -2,7 +2,7 @@ class Validators {
   static final _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   static String? required(String? v, {String label = 'This field'}) =>
-    (v == null || v.trim().isEmpty) ? '$label is required' : null;
+      (v == null || v.trim().isEmpty) ? '$label is required' : null;
 
   static String? email(String? v) {
     if (v == null || v.trim().isEmpty) return 'Email is required';

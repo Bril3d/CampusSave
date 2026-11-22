@@ -2,20 +2,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/models/offer.dart';
 import 'package:mobile/utils/offer_filter.dart';
 
-Offer _offer(String id, String title, String shop, String category,
-    double original, double price) {
-  final now = DateTime(2026, 11, 18, 12);
+Offer _offer(
+  String id,
+  String title,
+  String shop,
+  String category,
+  double original,
+  double price,
+) {
   return Offer(
     id: id,
     title: title,
     description: '',
-    merchantName: shop,
+    shopName: shop,
+    shopId: 'test-shop',
     category: category,
     originalPrice: original,
-    discountedPrice: price,
+    price: price,
     quantity: 5,
-    pickupStart: now,
-    pickupEnd: now.add(const Duration(hours: 1)),
+    pickupFrom: '12:00',
+    pickupTo: '13:00',
   );
 }
 
