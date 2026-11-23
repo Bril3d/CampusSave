@@ -14,7 +14,7 @@ class OfferFormScreen extends StatefulWidget {
 class _State extends State<OfferFormScreen> {
   final _fk   = GlobalKey<FormState>();
   final _repo  = OfferRepository();
-  late final TextEditingController _title, _desc, _orig, _price, _qty;
+  late final TextEditingController _title, _desc, _orig, _price, _qty, _photo;
   String _cat = offerCategories.first;
   TimeOfDay _start = const TimeOfDay(hour: 17, minute: 0);
   TimeOfDay _end   = const TimeOfDay(hour: 19, minute: 0);
@@ -30,6 +30,7 @@ class _State extends State<OfferFormScreen> {
     _orig  = TextEditingController(text: e != null ? e.originalPrice.toString() : '');
     _price = TextEditingController(text: e != null ? e.price.toString() : '');
     _qty   = TextEditingController(text: e != null ? e.quantity.toString() : '');
+    _photo = TextEditingController(text: e?.photo ?? '');
     if (e != null) {
       _cat   = e.category;
       final s = e.pickupFrom.split(':');
@@ -51,6 +52,7 @@ class _State extends State<OfferFormScreen> {
   @override void dispose() {
     _title.dispose(); _desc.dispose();
     _orig.dispose();  _price.dispose(); _qty.dispose();
+    _photo.dispose();
     super.dispose();
   }
 
@@ -66,6 +68,7 @@ class _State extends State<OfferFormScreen> {
     final body = {
       'title':         _title.text.trim(),
       'description':   _desc.text.trim(),
+      'photo':         _photo.text.trim(),
       'category':      _cat,
       'originalPrice': double.parse(_orig.text.trim()),
       'price':         double.parse(_price.text.trim()),
@@ -108,6 +111,13 @@ class _State extends State<OfferFormScreen> {
                 labelText: 'Description',
                 prefixIcon: Icon(Icons.description_outlined),
                 alignLabelWithHint: true)),
+          const SizedBox(height: 14),
+          TextFormField(controller: _photo,
+            keyboardType: TextInputType.url,
+            decoration: const InputDecoration(
+                labelText: 'Photo URL (optional)',
+                prefixIcon: Icon(Icons.image_outlined),
+                hintText: 'https://images.unsplash.com/...')),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(
             value: _cats.contains(_cat) ? _cat : _cats.first,

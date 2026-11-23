@@ -32,17 +32,19 @@ class _RoleHomeScreenState extends State<RoleHomeScreen> {
       if (role == UserRole.student) return StudentHomeScreen(user: widget.user, role: role);
       if (role == UserRole.merchant) return MerchantHomeScreen(user: widget.user, role: role);
       if (role == UserRole.admin) return AdminHomeScreen(user: widget.user);
-      return _PendingScreen(user: widget.user, role: role);
+      return _PendingScreen(user: widget.user, role: role, onRefresh: _reload);
     });
 }
 
 class _PendingScreen extends StatelessWidget {
-  final User user; final UserRole role;
-  const _PendingScreen({required this.user, required this.role});
+  final User user; final UserRole role; final VoidCallback onRefresh;
+  const _PendingScreen({required this.user, required this.role, required this.onRefresh});
   @override Widget build(BuildContext context) {
     final s = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('CampusSave'), actions: [
+        IconButton(icon: const Icon(Icons.refresh), tooltip: 'Check status',
+          onPressed: onRefresh),
         IconButton(icon: const Icon(Icons.account_circle_outlined), tooltip: 'Profile',
           onPressed: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => ProfileScreen(user: user, role: role)))),
@@ -58,6 +60,10 @@ class _PendingScreen extends StatelessWidget {
           const Text('Your merchant account is waiting for admin validation.\n'
             'You will be notified once approved.', textAlign: TextAlign.center),
           const SizedBox(height: 24),
+          ElevatedButton.icon(icon: const Icon(Icons.refresh),
+            label: const Text('Check approval status'),
+            onPressed: onRefresh),
+          const SizedBox(height: 12),
           OutlinedButton.icon(icon: const Icon(Icons.logout),
             label: const Text('Sign out'),
             style: OutlinedButton.styleFrom(

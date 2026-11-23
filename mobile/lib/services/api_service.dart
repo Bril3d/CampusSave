@@ -12,7 +12,14 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  final _client = http.Client();
+  final http.Client _client;
+  final Future<String?> Function()? _tokenProvider;
+
+  ApiService({
+    http.Client? client,
+    Future<String?> Function()? tokenProvider,
+  })  : _client = client ?? http.Client(),
+        _tokenProvider = tokenProvider;
 
   Future<dynamic> get(String path, {Map<String,String>? q, bool auth=true}) =>
     _send('GET', path, query: q, auth: auth);
@@ -32,7 +39,9 @@ class ApiService {
     final headers = <String,String>{'Accept': 'application/json'};
     if (body != null) headers['Content-Type'] = 'application/json';
     if (auth) {
-      final tok = await AuthService().getIdToken();
+      final tok = _tokenProvider != null
+          ? await _tokenProvider()
+          : await AuthService().getIdToken();
       if (tok == null) throw const ApiException('Not signed in.', statusCode: 401);
       headers['Authorization'] = 'Bearer $tok';
     }

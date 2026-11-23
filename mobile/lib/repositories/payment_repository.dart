@@ -18,7 +18,9 @@ class PaymentResult {
 /// POST /api/orders/:id/mock-pay   (PAYMENT_PROVIDER=mock → { ok: true })
 /// POST /api/orders/:id/pay        (konnect → { payUrl: "..." })
 class PaymentRepository {
-  final _api = ApiService();
+  final ApiService _api;
+
+  PaymentRepository({ApiService? api}) : _api = api ?? ApiService();
 
   Future<PaymentResult> pay(Order order) async {
     // 1. Try mock-pay (works when backend has PAYMENT_PROVIDER=mock).

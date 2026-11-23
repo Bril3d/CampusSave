@@ -9,6 +9,7 @@ class AppColors {
   static const teal       = Color(0xFF00C2B2);
   static const purple     = Color(0xFF7C3AED);
   static const red        = Color(0xFFFF3B5C);
+  static const blue       = Color(0xFF2563EB);
   static const cardYellow = Color(0xFFFFFBD1);
   static const cardGreen  = Color(0xFFE0FFF0);
   static const cardOrange = Color(0xFFFFEEE5);

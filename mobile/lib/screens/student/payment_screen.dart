@@ -4,7 +4,6 @@ import '../../models/order.dart';
 import '../../repositories/payment_repository.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/neo_widgets.dart';
-import '../../widgets/state_views.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Order order;
@@ -18,7 +17,6 @@ class _State extends State<PaymentScreen> {
   Future<void> _pay() async {
     setState(() { _busy = true; _error = null; });
     final nav = Navigator.of(context);
-    final msg = ScaffoldMessenger.of(context);
     try {
       final result = await PaymentRepository().pay(widget.order);
       if (!mounted) return;

@@ -52,8 +52,32 @@ class _State extends State<OfferDetailScreen> {
         // Hero
         NeoCard(color: AppColors.black, padding: EdgeInsets.zero,
           child: SizedBox(height: 160, child: Stack(children: [
-            Center(child: Icon(categoryIcon(o.category),
-                size: 80, color: Colors.white.withAlpha(55))),
+            if (o.photo != null && o.photo!.isNotEmpty)
+              Positioned.fill(
+                child: Image.network(
+                  o.photo!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Center(
+                    child: Icon(categoryIcon(o.category),
+                        size: 80, color: Colors.white.withAlpha(55)),
+                  ),
+                ),
+              )
+            else
+              Center(child: Icon(categoryIcon(o.category),
+                  size: 80, color: Colors.white.withAlpha(55))),
+            if (o.photo != null && o.photo!.isNotEmpty)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black.withAlpha(40), Colors.black.withAlpha(180)],
+                    ),
+                  ),
+                ),
+              ),
             Positioned(top: 16, right: 16,
               child: NeoTag(label: '-${o.discountPercent}%', color: AppColors.yellow)),
             Positioned(bottom: 12, left: 14, child: Column(

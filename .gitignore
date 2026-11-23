@@ -10,7 +10,27 @@ dist/
 *serviceAccountKey*.json
 *firebase-adminsdk*.json
 
+# Flutter / Dart / Android / Desktop
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+**/build/
+.gradle/
+**/.gradle/
+**/ephemeral/
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
 # IDE / OS
 .idea/
 .vscode/
 .DS_Store
+
+# Agent & local tools
+.agents/
+.aider-desk/
+skills-lock.json

@@ -14,7 +14,9 @@ class OfferException implements Exception {
 /// DELETE /api/offers/:id      (merchant)
 /// GET  /api/categories        (public)
 class OfferRepository {
-  final _api = ApiService();
+  final ApiService _api;
+
+  OfferRepository({ApiService? api}) : _api = api ?? ApiService();
 
   Future<List<Offer>> fetchAll({
     String query    = '',

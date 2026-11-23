@@ -12,7 +12,9 @@ class OrderException implements Exception {
 /// POST /api/orders/:id/cancel   – cancel
 /// POST /api/orders/validate     – merchant QR validation
 class OrderRepository {
-  final _api = ApiService();
+  final ApiService _api;
+
+  OrderRepository({ApiService? api}) : _api = api ?? ApiService();
 
   Future<List<Order>> fetchMine() async {
     try {
